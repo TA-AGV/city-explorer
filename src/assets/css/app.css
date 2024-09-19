@@ -1,8 +1,8 @@
 body{
-    padding: 20px;
-    background-color: rgb(243, 223, 198);
-    margin: auto;
-  }
+  padding: 20px;
+  background-color: rgb(243, 223, 198);
+  margin: auto;
+}
 
 .cardGroup {
 display:flex;

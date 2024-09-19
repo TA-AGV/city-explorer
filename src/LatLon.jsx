@@ -1,14 +1,12 @@
 import React from 'react';
 
-class LatLon extends React.Component {
-  render() {
+function LatLon(props) {
     return(
       <>
-        <h2>Welcome to {this.props.city}</h2>
-        <p>{this.props.city} is located at {this.props.lat} by {this.props.lon}</p>
+        <h2>Welcome to {props.city}</h2>
+        <p>{props.city} is located at {props.lat} by {props.lon}</p>
       </>
     );
-  }
+  
 }
-
 export default LatLon;

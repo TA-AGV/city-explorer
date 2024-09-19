@@ -3,22 +3,18 @@ import Header from './Header';
 import Footer from './Footer';
 import Explore from './Explore';
 import './assets/css/app.css';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
-class App extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state={};
-  }
+function App() {
 
-  render() {
-    return(
-      <>
-        <Header />
-        <Explore />
-        <Footer />
-      </>
-    );
-  }
+  return (
+    <>
+      <Header />
+      <Explore />
+      <Footer />
+    </>
+  );
+
 }
 
 export default App;

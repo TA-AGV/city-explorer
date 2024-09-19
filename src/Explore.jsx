@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Container,
   Row,
@@ -8,84 +8,117 @@ import CitySearch from './CitySearch';
 import axios from 'axios';
 import LatLon from './LatLon';
 import Map from './Map';
+import Weather from './Weather';
+import Movie from './Movie';
+const API_KEY = import.meta.env.VITE_LOCATION_API_KEY;
+const SERVER_URL = import.meta.env.VITE_SERVER_URL;
 
-const API_KEY = "pk.52835dbb83a2ba69df0b2311d94d3d70";
+function Explore() {
+  const [displayError, setDisplayError] = useState(false);
+  const [displayMap, setDisplayMap] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [latitude, setLatitude] = useState('');
+  const [location, setLocation] = useState('');
+  const [longitude, setLongitude] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [weather, setWeather] = useState([]);
+  const [movie, setMovie] = useState([]);
 
-class Explore extends React.Component {
-  constructor(props){
-    super(props);
-    this.state = {
-      searchQuery: '',
-      location: '',
-      latitude: '',
-      longitude: '',
-      displayMap: false,
-      displayError: false,
-      errorMessage: '',
-    };
-  }
-
-  updateCity = (e) => {
-    this.setState({ searchQuery: e.target.value });
+  const updateCity = (e) => {
+    setSearchQuery(e.target.value);
   };
 
-  displayLatLon = async () => {
-    const url = `https://us1.locationiq.com/v1/search.php?key=${API_KEY}&q=${this.state.searchQuery}&format=json`;
+  const displayLocation = async () => {
+    const url = `https://us1.locationiq.com/v1/search.php?key=${API_KEY}&q=${searchQuery}&format=json`;
     let location;
     try {
       location = await axios.get(url);
-      this.setState({
-        location: location.data[0].display_name,
-        latitude: location.data[0].lat,
-        longitude: location.data[0].lon,
-        displayMap: true,
-        displayError: false });
-    } catch(error) {
-      this.setState({
-        displayMap: false,
-        displayError: true,
-        errorMessage: error.response.status + ': ' + error.response.data.error });
+      setLocation(location.data[0].display_name);
+      setLatitude(location.data[0].lat);
+      setLongitude(location.data[0].lon);
+      setDisplayMap(true);
+      setDisplayError(false);
+    } catch (error) {
+      setDisplayMap(false);
+      setDisplayError(true);
+      setErrorMessage(error.response.status + ':' + error.response.data.error);
+      console.log(location);
     }
-    console.log(location);
+    displayWeather(location.data[0].lat, location.data[0].lon);
   };
 
-  render() {
-    return(
-      <Container fluid>
-        <Row>
-          <Col>
-            <CitySearch
-              updateCity={this.updateCity}
-              displayLatLon={this.displayLatLon}
-              hasError={this.state.displayError}
-              errorMessage={this.state.errorMessage}
-            />
-          </Col>
-        </Row>
-        {this.state.displayMap &&
-          <>
-            <Row>
-              <Col>
-                <LatLon
-                  city={this.state.location}
-                  lat={this.state.latitude}
-                  lon={this.state.longitude}
-                />
-              </Col>
-            </Row>
-            <Row>
-              <Col>
-                <Map
-                  img_url={`https://maps.locationiq.com/v3/staticmap?key=${API_KEY}&center=${this.state.latitude},${this.state.longitude}&size=${window.innerWidth}x300&format=jpg&zoom=12`}
-                  city={this.state.location}
-                />
-              </Col>
-            </Row>
-          </>
-        }
-      </Container>
-    );
-  }
-}
+  const displayWeather = async (lat, lon) => {
+    try {
+      let weather = await axios.get(`${SERVER_URL}/weather`, { params: { lat: lat, lon: lon } });
+      console.log(weather.data[0].codeCountry);
+      setWeather(weather.data);
+      console.log(weather);
+    } catch (error) {
+      setDisplayMap(false);
+      setDisplayError(true);
+      setErrorMessage(error.response.status + ':' + error.response.data.error);
+      console.log(error);
+    }
+    displayMovie(weather.code_country);
+    
+  };
 
+  const displayMovie = async (country) => {
+    try {
+      const movie = await axios.get(`${SERVER_URL}/movie`, { params: { country: country } });
+      console.log(movie);
+      setMovie(movie.data);
+    } catch (error) {
+      setDisplayMap(false);
+      setDisplayError(true);
+      setErrorMessage(error.response.status + ':' + error.response.data.error);
+    }
+  }
+
+  return (
+    <Container fluid>
+      <Row>
+        <Col>
+          <CitySearch
+            updateCity={updateCity}
+            displayLocation={displayLocation}
+            hasError={displayError}
+            errorMessage={errorMessage}
+          />
+        </Col>
+      </Row>
+      {displayMap &&
+        <>
+          <Row>
+            <Col>
+              <LatLon
+                city={location}
+                lat={latitude}
+                lon={longitude}
+              />
+            </Col>
+          </Row>
+          <Row>
+            <Col>
+              <Map
+                img_url={`https://maps.locationiq.com/v3/staticmap?key=${API_KEY}&center=${latitude},${longitude}&size=${window.innerWidth}x300&format=jpg&zoom=12`}
+                city={location}
+              />
+            </Col>
+          </Row>
+          <Row>
+            <Col>
+              <Weather weather={weather} />
+            </Col>
+          </Row>
+          <Row>
+            <Col>
+              <Movie movie={movie} />
+            </Col>
+          </Row>
+        </>
+      }
+    </Container>
+  );
+}
 export default Explore;
